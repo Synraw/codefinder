@@ -8,3 +8,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 file(GLOB SOURCES "src/*.cpp")
 
 add_executable(Codefinder ${SOURCES})
+target_link_libraries(Codefinder Shlwapi)

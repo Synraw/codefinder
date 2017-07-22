@@ -93,6 +93,14 @@ namespace Codefinder
 			if (m_hProcess != NULL && m_hProcess != INVALID_HANDLE_VALUE)
 			{
 				m_dwProcID = processID;
+
+				memset(m_szPath, 0, MAX_PATH);
+				memset(m_szName, 0, MAX_PATH);
+
+				GetModuleFileNameEx(m_hProcess, NULL, m_szPath, MAX_PATH);
+				strcpy_s(m_szName, m_szPath);
+				PathStripPath(m_szName);
+
 				return true;
 			}
 		}
