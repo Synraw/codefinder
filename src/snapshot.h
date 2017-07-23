@@ -13,6 +13,8 @@
 #include <vector>
 #include <Windows.h>
 
+#include "peparse.h"
+
 namespace Codefinder
 {
 	class Process;
@@ -130,7 +132,14 @@ namespace Codefinder
 		void UpdateModules();
 		void UpdateMemoryRegions(); // Assumes module list is already populated ( with UpdateModules() )
 
+		// Uses the contents of the page to try discover if it is anything of use to us
 		bool ScanMemoryRegion(ProcessMemoryPage& page);
+
+		// Returns the module containing the given address. Returns nullptr otherwise
+		ProcessModule* GetContainingModule(uintptr_t address);
+
+		// Attemps to guess the name of or atleast provide a dummy name for a hidden module
+		std::string NameHiddenModule(PEParse::PEParser& pe, MEMORY_BASIC_INFORMATION &mbi, ProcessModule& mod);
 	};
 	
 }

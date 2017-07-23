@@ -68,6 +68,8 @@ namespace Codefinder
 			return VirtualFreeEx(m_hProcess, page.m_MBI.BaseAddress, page.m_MBI.RegionSize, MEM_RELEASE) == TRUE;
 		}
 
+		ProcessSnapshot* Snapshot();
+
 	private:
 
 		HANDLE	m_hProcess;
@@ -75,6 +77,8 @@ namespace Codefinder
 
 		char	m_szPath[MAX_PATH];
 		char	m_szName[MAX_PATH];
+
+		std::vector<ProcessSnapshot*> m_vecSnapshots;
 
 	};
 

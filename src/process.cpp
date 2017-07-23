@@ -108,4 +108,23 @@ namespace Codefinder
 		return false;
 	}
 
+	/*
+		Takes a new process snapshot
+	*/
+	ProcessSnapshot* Process::Snapshot()
+	{
+		ProcessSnapshot* newSnap = new ProcessSnapshot(this);
+		if (newSnap->Snapshot())
+		{
+			m_vecSnapshots.push_back(newSnap);
+			return newSnap;
+		}
+		else
+		{
+			delete newSnap;
+			return nullptr;
+		}
+		
+	}
+
 }
