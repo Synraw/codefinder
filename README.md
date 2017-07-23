@@ -18,7 +18,7 @@ This is obviously aimed at windows systems, and some structures might be a littl
 - Scanning for target specific hooks
 
 ### Building:
-For the easiest time building this project, use Visual Studio 2017 to open the folder as a cmake project. Older versions of visual studio by default support for cmake and this project makes use of a few C++17 features so most older compilers will not build it.
+For the easiest time building this project, use Visual Studio 2017 to open the folder as a cmake project. Older versions of visual studio by default do not support cmake and this project makes use of a few C++17 features so most older compilers will not build it.
 
 ### Thanks:
 Thanks to [Timboy67678](https://github.com/Timboy67678) and Daax for letting me bounce ideas off them now and then :heart_eyes:
