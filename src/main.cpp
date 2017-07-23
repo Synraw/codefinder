@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "process.h"
+#include <winplusplus.h>
 
 int main (int argc, char* argv[])
 {

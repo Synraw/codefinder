@@ -1,0 +1,3 @@
+[submodule "libs/WindowsPlusPlus"]
+	path = libs/WindowsPlusPlus
+	url = https://github.com/Timboy67678/WindowsPlusPlus.git
