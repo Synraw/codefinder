@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
 
 	//(new MainDialog())->RunDlg();
 
-	Codefinder::Process p("csgo.exe");
+	Codefinder::Process p("hl2.exe");
 
 	if (p.IsConnected())
 	{

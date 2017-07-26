@@ -142,6 +142,7 @@ namespace Codefinder
 
 		// Uses the contents of the page to try discover if it is anything of use to us
 		bool ScanMemoryRegion(ProcessMemoryPage& page);
+		bool CheckCommonPatterns(unsigned char* pageStart, ProcessMemoryPage& page);
 
 		// Returns the module containing the given address. Returns nullptr otherwise
 		ProcessModule* GetContainingModule(uintptr_t address);

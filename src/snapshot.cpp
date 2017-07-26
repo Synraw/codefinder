@@ -15,6 +15,7 @@
 #include <ntstatus.h>
 
 #include "process.h"
+#include "util.h"
 
 #define ThreadQuerySetWin32StartAddress 9
 typedef NTSTATUS(WINAPI *pNtQIT)(HANDLE, LONG, PVOID, ULONG, PULONG);
@@ -66,6 +67,10 @@ namespace Codefinder
 		return true;
 	}
 
+	/*
+		Builds a list of process threads, checking there starting addresses to see if they are
+		starting inside a page which doesnt belong to any legit modules in the process
+	*/
 	void ProcessSnapshot::UpdateThreads()
 	{
 		m_Threads.clear();
@@ -129,6 +134,10 @@ namespace Codefinder
 
 	}
 
+	/*
+		Builds a list of modules currently loaded in the process. This list will be used to check
+		if pages and threads belong to any of these legit modules later on
+	*/
 	void ProcessSnapshot::UpdateModules()
 	{
 		m_Modules.clear();
@@ -177,6 +186,11 @@ namespace Codefinder
 		}
 	}
 
+	/*
+		Builds a list of all allocated memory pages in the process. For each block, it tries to associate
+		them with known modules. If it doesn't belong to anything legit, it applies a number of checks and
+		heuristic scans to try figure out what this is
+	*/
 	void ProcessSnapshot::UpdateMemoryRegions()
 	{
 		m_Memory.clear();
@@ -243,6 +257,9 @@ namespace Codefinder
 		} while (numBytes);
 	}
 
+	/*
+		Applies a number of techniques to attempt to use a pages data to determine what it is or belongs to
+	*/
 	bool ProcessSnapshot::ScanMemoryRegion(ProcessMemoryPage& page)
 	{
 		// Regular module case
@@ -254,7 +271,7 @@ namespace Codefinder
 		}
 
 		// Try take some guesses based on what the page contains
-		char *buffer = new char[page.m_MBI.RegionSize];
+		unsigned char *buffer = new unsigned char[page.m_MBI.RegionSize];
 		if (m_pProcess->RemoteRead(page.m_addrRange, buffer))
 		{
 			PEParse::PEParser pe(buffer, true);
@@ -280,10 +297,39 @@ namespace Codefinder
 				page.m_pContainingModule = &m_Modules.back();
 
 				printf("[+] Found hidden module %s @ 0x%x\n", pm.m_strModuleName.c_str(), page.m_addrRange.m_dwBaseAddress);
+
+				delete buffer;
+				return true;
+			}
+			else
+			{
+
+				// See if it contains data or code that we recognise
+				if (CheckCommonPatterns(buffer, page))
+				{
+					delete buffer;
+					return true;
+				}
 			}
 		}
 		delete buffer;
 		
+		return false;
+	}
+
+	bool ProcessSnapshot::CheckCommonPatterns(unsigned char* pageStart, ProcessMemoryPage& page)
+	{
+		// VS 2015 x86 DLL - ___security_init_cookie - 8D 45 F4 50 FF 15 ? ? ? ? 8B 45 F8
+		if (Utilities::FindPattern((uintptr_t)pageStart, page.m_MBI.RegionSize, (BYTE*)"\x8D\x45\xF4\x50\xFF\x15\x00\x00\x00\x00\x8B\x45\xF8", "xxxxxx????xxx") != NULL)
+		{
+			printf("[+] Code page matches VS 2015 x86 CRT\n");
+			page.m_strLabel = "UNKN .text";
+			return true;
+		}
+
+		// TODO: add more
+		// possibly common strings that the crt and libs add to rdata?
+
 		return false;
 	}
 
@@ -365,4 +411,8 @@ namespace Codefinder
 
 		return tempName;
 	}
+
+	// TODO: CRT init hunting
+	
+	  
 }
