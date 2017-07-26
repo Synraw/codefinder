@@ -8,8 +8,6 @@
 */
 // --------------------------------------------------------------
 
-#undef UNICODE
-
 #include "process.h"
 
 #include <Shlwapi.h>

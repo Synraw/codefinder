@@ -7,14 +7,51 @@
 	Date: 21/07/17
 */
 // --------------------------------------------------------------
-#undef UNICODE
 #include "snapshot.h"
 
 #include <Shlwapi.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
+#include <ntstatus.h>
 
 #include "process.h"
+
+#define ThreadQuerySetWin32StartAddress 9
+typedef NTSTATUS(WINAPI *pNtQIT)(HANDLE, LONG, PVOID, ULONG, PULONG);
+
+// credits: https://forum.sysinternals.com/how-to-get-the-start-address-and-modu_topic5127_post18072.html#18072
+static DWORD WINAPI GetThreadStartAddress(HANDLE hThread)
+{
+
+	NTSTATUS ntStatus;
+	HANDLE hDupHandle;
+	DWORD dwStartAddress;
+
+	pNtQIT NtQueryInformationThread = (pNtQIT)GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQueryInformationThread");
+
+	if (NtQueryInformationThread == NULL)
+		return 0;
+
+	HANDLE hCurrentProcess = GetCurrentProcess();
+
+	if (!DuplicateHandle(hCurrentProcess, hThread, hCurrentProcess, &hDupHandle, THREAD_QUERY_INFORMATION, FALSE, 0))
+	{
+
+		SetLastError(ERROR_ACCESS_DENIED);
+		return 0;
+	}
+
+	ntStatus = NtQueryInformationThread(hDupHandle, ThreadQuerySetWin32StartAddress, &dwStartAddress, sizeof(DWORD), NULL);
+
+	CloseHandle(hDupHandle);
+
+	if (ntStatus != STATUS_SUCCESS)
+		return 0;
+
+	return dwStartAddress;
+
+}
+
 
 namespace Codefinder
 {
@@ -22,10 +59,71 @@ namespace Codefinder
 	{
 		UpdateModules();
 		UpdateMemoryRegions();
+		UpdateThreads();
 
 		//...
 
 		return true;
+	}
+
+	void ProcessSnapshot::UpdateThreads()
+	{
+		m_Threads.clear();
+
+		HANDLE hThreadSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+		if (hThreadSnapshot != INVALID_HANDLE_VALUE)
+		{
+			THREADENTRY32 tEntry = { 0 };
+			tEntry.dwSize = sizeof(THREADENTRY32);
+
+			// Iterate threads
+			for (BOOL success = Thread32First(hThreadSnapshot, &tEntry); success == TRUE;
+				success = Thread32Next(hThreadSnapshot, &tEntry))
+			{
+				if (tEntry.th32OwnerProcessID != m_pProcess->GetProcessID())
+					continue;
+
+				ProcessThread pt;
+				pt.m_theadID = tEntry.th32ThreadID;
+				pt.m_hThreadHandle = OpenThread(THREAD_ALL_ACCESS, false, pt.m_theadID);
+				pt.m_dwStartAddress = GetThreadStartAddress(pt.m_hThreadHandle);
+				pt.m_pModule = nullptr; pt.m_pPage = nullptr;
+
+				// Check where this thread started...
+				if (pt.m_dwStartAddress)
+				{
+					ProcessMemoryPage* page = GetContainingPage(pt.m_dwStartAddress);
+
+					if (page && page->IsExecutable())
+					{
+						pt.m_pPage = page;
+
+						ProcessModule* mod = page->m_pContainingModule;
+						if (mod && mod->GetFlag(ProcessModule::MF_Manual) == false)
+						{
+							// Legit thread
+							pt.m_pModule = mod;
+						}
+						else
+						{
+							// In this case, the thread is started in a manually mapped module, or a peice of shellcode
+							pt.m_bIsManualCode = true;
+							printf("[+] Found spooky thread starting at 0x%x\n", pt.m_dwStartAddress);
+						}
+					}
+					else
+					{
+						// possibly it got freed?
+					}
+				}
+
+				m_Threads.push_back(pt);
+			}
+
+			CloseHandle(hThreadSnapshot);
+		}
+
 	}
 
 	void ProcessSnapshot::UpdateModules()
@@ -192,6 +290,17 @@ namespace Codefinder
 		{
 			if (mod.m_addrRange.Contains(address))
 				return &mod;
+		}
+
+		return nullptr;
+	}
+
+	ProcessMemoryPage* ProcessSnapshot::GetContainingPage(uintptr_t address)
+	{
+		for (auto& page : m_Memory)
+		{
+			if (page.m_addrRange.Contains(address))
+				return &page;
 		}
 
 		return nullptr;

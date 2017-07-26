@@ -104,7 +104,13 @@ namespace Codefinder
 	*/
 	struct ProcessThread
 	{
+		DWORD m_theadID;
+		HANDLE m_hThreadHandle;
+		uintptr_t m_dwStartAddress;
 
+		bool m_bIsManualCode;
+		ProcessMemoryPage*	m_pPage;
+		ProcessModule*		m_pModule;
 	};
 
 	/*
@@ -126,17 +132,22 @@ namespace Codefinder
 		Codefinder::Process* m_pProcess;
 
 		// Retrieved data
-		std::vector<ProcessModule> m_Modules;
-		std::vector<ProcessMemoryPage> m_Memory;
+		std::vector<ProcessModule>		m_Modules;
+		std::vector<ProcessMemoryPage>	m_Memory;
+		std::vector<ProcessThread>		m_Threads;
 
 		void UpdateModules();
 		void UpdateMemoryRegions(); // Assumes module list is already populated ( with UpdateModules() )
+		void UpdateThreads();
 
 		// Uses the contents of the page to try discover if it is anything of use to us
 		bool ScanMemoryRegion(ProcessMemoryPage& page);
 
 		// Returns the module containing the given address. Returns nullptr otherwise
 		ProcessModule* GetContainingModule(uintptr_t address);
+
+		// Returns the module containing the given address. Returns nullptr otherwise
+		ProcessMemoryPage* GetContainingPage(uintptr_t address);
 
 		// Attemps to guess the name of or atleast provide a dummy name for a hidden module
 		std::string NameHiddenModule(PEParse::PEParser& pe, MEMORY_BASIC_INFORMATION &mbi, ProcessModule& mod);

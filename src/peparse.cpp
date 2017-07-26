@@ -7,7 +7,6 @@
 	Date: 22/07/17
 */
 // --------------------------------------------------------------
-#undef UNICODE
 #include "peparse.h"
 
 #include <memory>
