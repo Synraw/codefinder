@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
 
 	//(new MainDialog())->RunDlg();
 
-	Codefinder::Process p("bf3.exe");
+	Codefinder::Process p("csgo.exe");
 
 	if (p.IsConnected())
 	{
@@ -48,7 +48,8 @@ int main (int argc, char* argv[])
 		{
 			for (auto& mod : snapper->GetModules())
 			{
-				std::printf("0x%x\t\t%s\n", mod.m_addrRange.m_dwBaseAddress, mod.m_strModuleName.c_str());
+				if(mod.GetFlag(Codefinder::ProcessModule::MF_Manual))
+					std::printf("0x%x\t\t%s\n", mod.m_addrRange.m_dwBaseAddress, mod.m_strModuleName.c_str());
 			}
 		}
 		else

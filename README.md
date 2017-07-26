@@ -11,11 +11,12 @@ This is obviously aimed at windows systems, and some structures might be a littl
  - Determining module name from file mappings
  - Dumping raw memory pages to file
  - Dumping raw modules to file
+ - Tracing threads back to injected code blocks
 
 ### Planned:
-- Tracing threads back to injected code blocks
 - Scanning for common windows hooks
 - Scanning for target specific hooks
+- Pattern scanning for common code (such as CRT implementations)
 
 ### Building:
 For the easiest time building this project, use Visual Studio 2017 to open the folder as a cmake project. Older versions of visual studio by default do not support cmake and this project makes use of a few C++17 features so most older compilers will not build it.

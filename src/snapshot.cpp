@@ -109,7 +109,10 @@ namespace Codefinder
 						{
 							// In this case, the thread is started in a manually mapped module, or a peice of shellcode
 							pt.m_bIsManualCode = true;
-							printf("[+] Found spooky thread starting at 0x%x\n", pt.m_dwStartAddress);
+							printf("[+] Found suspicious thread starting at 0x%x\n", pt.m_dwStartAddress);
+							if (mod)
+								printf("[+] Thread belongs to hidden module %s\n", mod->m_strModuleName.c_str());
+							printf("[+] Thread code page 0x%x - 0x%x\n", page->m_addrRange.m_dwBaseAddress, page->m_addrRange.m_dwBaseAddress + page->m_addrRange.m_cbSize);
 						}
 					}
 					else
