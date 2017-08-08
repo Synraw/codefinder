@@ -115,8 +115,21 @@ namespace Codefinder
 							// In this case, the thread is started in a manually mapped module, or a peice of shellcode
 							pt.m_bIsManualCode = true;
 							printf("[+] Found suspicious thread starting at 0x%x\n", pt.m_dwStartAddress);
+
+							// Link it to the hidden module
 							if (mod)
+							{
+								pt.m_pModule = mod;
+
 								printf("[+] Thread belongs to hidden module %s\n", mod->m_strModuleName.c_str());
+								m_Finds.push_back({ page->m_addrRange, std::string("Stray Thread Execution in ") + mod->m_strModuleName.c_str() });
+							}
+							else
+							{
+								m_Finds.push_back({ page->m_addrRange, std::string("Stray Thread Execution") });
+							}
+
+
 							printf("[+] Thread code page 0x%x - 0x%x\n", page->m_addrRange.m_dwBaseAddress, page->m_addrRange.m_dwBaseAddress + page->m_addrRange.m_cbSize);
 						}
 					}
@@ -298,6 +311,8 @@ namespace Codefinder
 
 				printf("[+] Found hidden module %s @ 0x%x\n", pm.m_strModuleName.c_str(), page.m_addrRange.m_dwBaseAddress);
 
+				m_Finds.push_back({ page.m_addrRange, std::string("Unlisted PE Module ") + pm.m_strModuleName.c_str() });
+
 				delete buffer;
 				return true;
 			}
@@ -324,6 +339,8 @@ namespace Codefinder
 		{
 			printf("[+] Code page matches VS 2015 x86 CRT\n");
 			page.m_strLabel = "UNKN .text";
+
+			m_Finds.push_back({ page.m_addrRange, std::string("Stray .text section (VS 2015 x86)")});
 			return true;
 		}
 

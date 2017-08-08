@@ -100,7 +100,7 @@ namespace Codefinder
 	};
 
 	/*
-		Todo: Stores information about a thread which has ran in the process
+		Stores information about a thread which has ran in the process
 	*/
 	struct ProcessThread
 	{
@@ -111,6 +111,15 @@ namespace Codefinder
 		bool m_bIsManualCode;
 		ProcessMemoryPage*	m_pPage;
 		ProcessModule*		m_pModule;
+	};
+
+	/*
+		Stores a small summary about something interesting that has been found
+	*/
+	struct SuspiciousData
+	{
+		AddressRange		m_addrLocation;   // Where it was found
+		std::string			m_strDesc; // Description to be displayed to the user
 	};
 
 	/*
@@ -127,6 +136,8 @@ namespace Codefinder
 
 		std::vector<ProcessModule>&		GetModules() { return m_Modules; }
 		std::vector<ProcessMemoryPage>&	GetMemory() { return m_Memory; }
+		std::vector<ProcessThread>&		GetThreads() { return m_Threads; }
+		std::vector<SuspiciousData>&	GetFoundItems() { return m_Finds; }
 
 	private:
 		Codefinder::Process* m_pProcess;
@@ -135,6 +146,7 @@ namespace Codefinder
 		std::vector<ProcessModule>		m_Modules;
 		std::vector<ProcessMemoryPage>	m_Memory;
 		std::vector<ProcessThread>		m_Threads;
+		std::vector<SuspiciousData>		m_Finds;
 
 		void UpdateModules();
 		void UpdateMemoryRegions(); // Assumes module list is already populated ( with UpdateModules() )

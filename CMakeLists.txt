@@ -4,6 +4,7 @@ project (Codefinder)
 # Setup the WPP Library
 link_directories("libs/WindowsPlusPlus/Release")
 include_directories("libs/WindowsPlusPlus/Win32++/")
+include_directories("C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0")
 
 # Change the CRT link type to match the WPP libs
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
